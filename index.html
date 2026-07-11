@@ -3,86 +3,235 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>測試網頁</title>
+<title>股市儀表板</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   :root {
     color-scheme: light dark;
+    --bg: #0f1115;
+    --card: #1a1d24;
+    --border: #2a2e37;
+    --text: #e8eaed;
+    --muted: #9aa0a8;
+    --up: #ef4444;
+    --down: #22c55e;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+    }
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: var(--bg);
+    color: var(--text);
     font-family: -apple-system, "Segoe UI", "Noto Sans TC", sans-serif;
-    background: linear-gradient(135deg, #6366f1, #06b6d4);
-    color: #fff;
+    padding: 24px 16px 60px;
+  }
+  header {
+    max-width: 1100px;
+    margin: 0 auto 24px;
     text-align: center;
-    padding: 24px;
+  }
+  header h1 {
+    margin: 0 0 6px;
+    font-size: 1.8rem;
+  }
+  #updated {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .grid {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
   }
   .card {
-    background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 16px;
-    padding: 48px 32px;
-    max-width: 480px;
-    box-shadow: 0 12px 32px rgba(0,0,0,0.2);
-  }
-  h1 {
-    margin: 0 0 12px;
-    font-size: 2rem;
-  }
-  p {
-    margin: 0 0 24px;
-    opacity: 0.9;
-    line-height: 1.6;
-  }
-  button {
-    background: #fff;
-    color: #4338ca;
-    border: none;
-    border-radius: 999px;
-    padding: 12px 28px;
-    font-size: 1rem;
-    font-weight: 600;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: transform 0.15s ease, border-color 0.15s ease;
   }
-  button:hover {
+  .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+    border-color: #6366f1;
   }
-  #count {
-    margin-top: 16px;
-    font-size: 0.95rem;
-    opacity: 0.85;
+  .card.active {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.35);
+  }
+  .card .name {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .card .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .card .change {
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .up { color: var(--up); }
+  .down { color: var(--down); }
+  .flat { color: var(--muted); }
+  .chart-section {
+    max-width: 1100px;
+    margin: 32px auto 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .chart-section h2 {
+    margin: 0 0 16px;
+    font-size: 1.1rem;
+  }
+  .chart-wrap {
+    position: relative;
+    height: 360px;
   }
   footer {
-    margin-top: 32px;
+    max-width: 1100px;
+    margin: 24px auto 0;
+    text-align: center;
+    color: var(--muted);
     font-size: 0.8rem;
-    opacity: 0.7;
+  }
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 40px;
   }
 </style>
 </head>
 <body>
-  <div class="card">
-    <h1>👋 這是一個測試網頁</h1>
-    <p>這頁面部署在 GitHub Pages 上，作為部署流程的測試內容。</p>
-    <p style="font-size:0.85rem;opacity:0.8;">（更新測試：這行是後續推送新增的內容）</p>
-    <button id="btn">點我試試看</button>
-    <div id="count">已點擊 0 次</div>
-    <footer>Deployed via GitHub Pages</footer>
+<header>
+  <h1>📈 股市指數儀表板</h1>
+  <div id="updated">載入中...</div>
+</header>
+
+<div id="grid" class="grid"></div>
+
+<section class="chart-section">
+  <h2 id="chart-title">近期走勢</h2>
+  <div class="chart-wrap">
+    <canvas id="chart"></canvas>
   </div>
+</section>
+
+<footer>資料每日自動更新 · 來源：Yahoo Finance / 台灣證券交易所 OpenAPI</footer>
 
 <script>
-  let count = 0;
-  const btn = document.getElementById('btn');
-  const countEl = document.getElementById('count');
-  btn.addEventListener('click', () => {
-    count++;
-    countEl.textContent = `已點擊 ${count} 次`;
+const RED_UP = getComputedStyle(document.documentElement).getPropertyValue('--up').trim();
+const GREEN_DOWN = getComputedStyle(document.documentElement).getPropertyValue('--down').trim();
+
+let chart;
+let currentKey = null;
+let seriesData = {};
+
+function pctChange(history) {
+  if (history.length < 2) return 0;
+  const last = history[history.length - 1].close;
+  const prev = history[history.length - 2].close;
+  return ((last - prev) / prev) * 100;
+}
+
+function fmt(n) {
+  return n.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+}
+
+function renderCards() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  Object.entries(seriesData).forEach(([key, s]) => {
+    const hist = s.history || [];
+    const last = hist[hist.length - 1];
+    const change = pctChange(hist);
+    const dir = change > 0 ? 'up' : change < 0 ? 'down' : 'flat';
+    const arrow = change > 0 ? '▲' : change < 0 ? '▼' : '';
+    const card = document.createElement('div');
+    card.className = 'card' + (key === currentKey ? ' active' : '');
+    card.dataset.key = key;
+    card.innerHTML = `
+      <div class="name">${s.name}</div>
+      <div class="value">${last ? fmt(last.close) : '—'}</div>
+      <div class="change ${dir}">${arrow} ${change.toFixed(2)}%</div>
+    `;
+    card.addEventListener('click', () => selectSeries(key));
+    grid.appendChild(card);
+  });
+}
+
+function selectSeries(key) {
+  currentKey = key;
+  document.querySelectorAll('.card').forEach(c => {
+    c.classList.toggle('active', c.dataset.key === key);
+  });
+  const s = seriesData[key];
+  document.getElementById('chart-title').textContent = `${s.name} 近期走勢`;
+  const labels = s.history.map(h => h.date);
+  const values = s.history.map(h => h.close);
+  const change = pctChange(s.history);
+  const lineColor = change >= 0 ? RED_UP : GREEN_DOWN;
+
+  if (chart) chart.destroy();
+  const ctx = document.getElementById('chart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: s.name,
+        data: values,
+        borderColor: lineColor,
+        backgroundColor: lineColor + '22',
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.2,
+        fill: true,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { maxTicksLimit: 8, color: '#9aa0a8' }, grid: { display: false } },
+        y: { ticks: { color: '#9aa0a8' }, grid: { color: 'rgba(128,128,128,0.15)' } },
+      },
+    },
+  });
+}
+
+fetch('data.json?_=' + Date.now())
+  .then(r => r.json())
+  .then(data => {
+    seriesData = data.series || {};
+    const keys = Object.keys(seriesData);
+    if (keys.length === 0) {
+      document.getElementById('grid').innerHTML = '<div class="empty">尚無資料</div>';
+      return;
+    }
+    document.getElementById('updated').textContent =
+      '最後更新：' + new Date(data.updated_at).toLocaleString('zh-TW');
+    renderCards();
+    selectSeries(keys[0]);
+  })
+  .catch(err => {
+    document.getElementById('grid').innerHTML = '<div class="empty">資料載入失敗</div>';
+    console.error(err);
   });
 </script>
 </body>
