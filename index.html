@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>測試網頁</title>
+<style>
+  :root {
+    color-scheme: light dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, "Segoe UI", "Noto Sans TC", sans-serif;
+    background: linear-gradient(135deg, #6366f1, #06b6d4);
+    color: #fff;
+    text-align: center;
+    padding: 24px;
+  }
+  .card {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 16px;
+    padding: 48px 32px;
+    max-width: 480px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+  }
+  h1 {
+    margin: 0 0 12px;
+    font-size: 2rem;
+  }
+  p {
+    margin: 0 0 24px;
+    opacity: 0.9;
+    line-height: 1.6;
+  }
+  button {
+    background: #fff;
+    color: #4338ca;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  }
+  #count {
+    margin-top: 16px;
+    font-size: 0.95rem;
+    opacity: 0.85;
+  }
+  footer {
+    margin-top: 32px;
+    font-size: 0.8rem;
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>👋 這是一個測試網頁</h1>
+    <p>這頁面部署在 GitHub Pages 上，作為部署流程的測試內容。</p>
+    <button id="btn">點我試試看</button>
+    <div id="count">已點擊 0 次</div>
+    <footer>Deployed via GitHub Pages</footer>
+  </div>
+
+<script>
+  let count = 0;
+  const btn = document.getElementById('btn');
+  const countEl = document.getElementById('count');
+  btn.addEventListener('click', () => {
+    count++;
+    countEl.textContent = `已點擊 ${count} 次`;
+  });
+</script>
+</body>
+</html>
